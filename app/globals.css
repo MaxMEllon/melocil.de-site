@@ -8,15 +8,11 @@
   --link: #0969da;
 
   --cell-empty: #ebedf0;
-  --cell-outside: transparent;
   --role-dj: #26a641;
   --role-vj: #a371f7;
 
   --tip-bg: #24292f;
   --tip-fg: #ffffff;
-
-  --cell-size: 11px;
-  --cell-gap: 3px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,7 +38,6 @@ body {
   color: var(--fg);
   font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans JP', sans-serif;
   line-height: 1.6;
-  /* 芝は .graph-scroll の中だけで横スクロールさせる */
   overflow-x: hidden;
 }
 
@@ -74,6 +69,24 @@ a {
   font-size: 0.875rem;
 }
 
+/* --- ロールの色 ---
+   [data-role] は塗りを --fill に置くだけにして、実際に background へ入れるかは
+   使う側（セル・凡例・件数）が決める。こうしないと .cell の背景と後勝ちで衝突する。 */
+
+[data-role='DJ'] {
+  --fill: var(--role-dj);
+}
+
+[data-role='VJ'] {
+  --fill: var(--role-vj);
+}
+
+/* DJ + VJ は 1 セルを斜めに割る（左下 = 緑 / 右上 = 紫）。
+   ハードストップにすると境界がぼやけない */
+[data-role='DJVJ'] {
+  --fill: linear-gradient(45deg, var(--role-dj) 0 50%, var(--role-vj) 50% 100%);
+}
+
 /* --- 凡例 --- */
 
 .legend {
@@ -97,25 +110,13 @@ a {
   width: 12px;
   height: 12px;
   border-radius: 2px;
-}
-
-/* DJ + VJ は 1 セルを斜めに割る。ハードストップにすると境界がぼやけない */
-[data-role='DJ'] {
-  background: var(--role-dj);
-}
-
-[data-role='VJ'] {
-  background: var(--role-vj);
-}
-
-[data-role='DJVJ'] {
-  background: linear-gradient(135deg, var(--role-dj) 0 50%, var(--role-vj) 50% 100%);
+  background: var(--fill);
 }
 
 /* --- 年セクション --- */
 
 .year {
-  margin-top: 3rem;
+  margin-top: 2.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
 }
@@ -155,45 +156,36 @@ a {
   width: 9px;
   height: 9px;
   border-radius: 2px;
-  background: inherit;
+  background: var(--fill);
 }
 
-.year-count[data-role='DJ']::before {
-  background: var(--role-dj);
-}
+/* --- 芝 ---
+   53 列がどの幅でも収まるように、セルの寸法はコンテナ幅から逆算する。
+   固定幅 + overflow で横スクロールさせない。 */
 
-.year-count[data-role='VJ']::before {
-  background: var(--role-vj);
-}
-
-.year-count[data-role='DJVJ']::before {
-  background: linear-gradient(135deg, var(--role-dj) 0 50%, var(--role-vj) 50% 100%);
-}
-
-.year-count[data-role] {
-  background: none;
-}
-
-/* --- 芝 --- */
-
-.graph-scroll {
-  overflow-x: auto;
-  /* overflow-x を auto にすると縦もクリップされるので、
-     セル下に出るツールチップの分の高さを内側に確保しておく */
-  padding: 0.75rem 0 4.25rem;
-  margin-bottom: -3.25rem;
+.graph-frame {
+  container-type: inline-size;
+  margin-top: 1rem;
 }
 
 .graph {
+  --weekday-width: 1.9rem;
+  --label-gap: 0.4rem;
+  /* 1 列あたりの間隔 → その 22% を隙間、残りをセル本体に割り当てる */
+  --pitch: calc((100cqw - var(--weekday-width) - var(--label-gap)) / var(--columns));
+  --cell-gap: calc(var(--pitch) * 0.22);
+  --cell-size: calc(var(--pitch) - var(--cell-gap));
+
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: var(--weekday-width) 1fr;
   grid-template-rows: auto auto;
-  gap: 0.35rem 0.5rem;
-  width: max-content;
+  column-gap: var(--label-gap);
+  row-gap: 0.35rem;
 }
 
 .graph-months {
   grid-column: 2;
+  grid-row: 1;
   display: grid;
   grid-template-columns: repeat(var(--columns), var(--cell-size));
   column-gap: var(--cell-gap);
@@ -213,11 +205,12 @@ a {
   grid-template-rows: repeat(7, var(--cell-size));
   row-gap: var(--cell-gap);
   font-size: 0.6875rem;
+  line-height: 1;
   color: var(--muted);
 }
 
 .graph-weekday {
-  line-height: var(--cell-size);
+  align-self: center;
   text-align: right;
   white-space: nowrap;
 }
@@ -228,18 +221,21 @@ a {
   display: grid;
   grid-template-rows: repeat(7, var(--cell-size));
   grid-auto-flow: column;
+  grid-auto-columns: var(--cell-size);
   gap: var(--cell-gap);
 }
 
 .cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
-  border-radius: 2px;
+  border-radius: max(1px, calc(var(--cell-size) * 0.18));
   background: var(--cell-empty);
 }
 
+.cell[data-role] {
+  background: var(--fill);
+}
+
 .cell[data-outside] {
-  background: var(--cell-outside);
+  background: transparent;
 }
 
 /* --- ツールチップ（JS なし） --- */
@@ -251,11 +247,11 @@ a {
 .cell[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
-  max-width: 22rem;
+  max-width: min(22rem, 90cqw);
   width: max-content;
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
@@ -289,7 +285,7 @@ a {
 /* --- 年ごとの出演リスト（ホバーできない環境向け） --- */
 
 .year-list {
-  margin-top: 0.5rem;
+  margin-top: 1rem;
 }
 
 .year-list summary {
@@ -327,22 +323,32 @@ a {
   font-size: 0.6875rem;
   color: var(--muted);
   white-space: nowrap;
-  background: none;
 }
 
 .event-title {
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 32rem) {
+/* 狭い画面ではセルの取り分を増やすため曜日ラベルを畳む */
+@media (max-width: 34rem) {
+  .graph {
+    --weekday-width: 0px;
+    --label-gap: 0px;
+  }
+
+  .graph-weekdays {
+    display: none;
+  }
+
+  .graph-months {
+    font-size: 0.5625rem;
+  }
+
   .year-list li {
     grid-template-columns: 5.5rem 1fr;
   }
 
-  .year-list .badge {
-    grid-column: 2;
-  }
-
+  .year-list .badge,
   .year-list .event-title {
     grid-column: 2;
   }

@@ -47,7 +47,7 @@ export function ContributionGraph({ grid }: { grid: YearGrid }) {
         </p>
       </header>
 
-      <div className="graph-scroll">
+      <div className="graph-frame">
         <div
           className="graph"
           style={{ '--columns': String(columnCount) } as CSSProperties}
