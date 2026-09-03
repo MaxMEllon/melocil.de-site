@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 
+import { announcementLink, X_HANDLE } from '@/lib/announcement'
 import { ROLE_LABELS } from '@/lib/appearances'
 import type { Cell, YearGrid } from '@/lib/heatmap'
 
@@ -101,15 +102,32 @@ export function ContributionGraph({ grid }: { grid: YearGrid }) {
       <details className="year-list">
         <summary>{grid.year}年の出演 {grid.counts.total} 件</summary>
         <ol>
-          {grid.appearances.map((appearance) => (
-            <li key={`${appearance.date}-${appearance.title}`}>
-              <time dateTime={appearance.date}>{appearance.date}</time>
-              <span className="badge" data-role={appearance.role}>
-                {ROLE_LABELS[appearance.role]}
-              </span>
-              <span className="event-title">{appearance.title}</span>
-            </li>
-          ))}
+          {grid.appearances.map((appearance) => {
+            const link = announcementLink(appearance)
+
+            return (
+              <li key={`${appearance.date}-${appearance.title}`}>
+                <time dateTime={appearance.date}>{appearance.date}</time>
+                <span className="badge" data-role={appearance.role}>
+                  {ROLE_LABELS[appearance.role]}
+                </span>
+                <a
+                  className="event-title"
+                  data-link={link.kind}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={
+                    link.kind === 'tweet'
+                      ? '告知ツイートを開く'
+                      : `X で @${X_HANDLE} の告知を検索する`
+                  }
+                >
+                  {appearance.title}
+                </a>
+              </li>
+            )
+          })}
         </ol>
       </details>
     </section>

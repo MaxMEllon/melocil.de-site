@@ -325,8 +325,21 @@ a {
   white-space: nowrap;
 }
 
+/* 告知ツイート（無ければ X 検索）へのリンク。
+   フォールバックかどうかは data-link に出しているが、
+   見に来た人には区別が要らないので見た目は揃えている */
 .event-title {
   overflow-wrap: anywhere;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 0.2em;
+}
+
+.event-title:hover,
+.event-title:focus-visible {
+  color: var(--link);
+  text-decoration-color: currentColor;
 }
 
 /* 狭い画面ではセルの取り分を増やすため曜日ラベルを畳む */

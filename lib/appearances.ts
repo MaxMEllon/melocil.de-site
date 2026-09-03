@@ -9,6 +9,8 @@ export type Appearance = {
   date: string
   title: string
   role: Role
+  /** 告知ツイートの URL。省略すると X 検索へのリンクにフォールバックする */
+  url?: string
 }
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -53,7 +55,14 @@ function parseOne(value: unknown, index: number): Appearance {
     throw new Error(`${at}.role: ${ROLES.join(' | ')} のいずれかが必要です (${JSON.stringify(role)})`)
   }
 
-  return { date, title: title.trim(), role }
+  const { url } = value as Record<string, unknown>
+  if (url !== undefined && (typeof url !== 'string' || !url.startsWith('https://'))) {
+    throw new Error(`${at}.url: https:// で始まる URL が必要です (${JSON.stringify(url)})`)
+  }
+
+  return url === undefined
+    ? { date, title: title.trim(), role }
+    : { date, title: title.trim(), role, url }
 }
 
 /** JSON を検証しつつ日付昇順で返す（JSON 側の並び順には依存しない） */
