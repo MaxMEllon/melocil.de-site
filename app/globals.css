@@ -1,72 +1,151 @@
+/* 白黒のみ。色相を一切使わないので、区別は明度・字間・罫線で付ける。
+   背景は WebGL のハーフトーン（components/ShaderBackground.tsx）が動くが、
+   前景の可読性が最優先なので、シェーダー側の輝度上限とベイルの二段で必ず暗く保つ。 */
+
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  --bg: #ffffff;
-  --fg: #1f2328;
-  --muted: #59636e;
-  --border: #d1d9e0;
-  --link: #0969da;
+  --bg: #000000;
+  --fg: #f2f2f3;
+  --muted: #a1a1a8;
+  --border: rgba(255, 255, 255, 0.16);
+  --link: #ffffff;
 
-  --cell-empty: #ebedf0;
-  --role-dj: #26a641;
-  --role-vj: #a371f7;
+  --cell-empty: rgba(255, 255, 255, 0.1);
+  --role-dj: #ffffff;
+  --role-vj: #7a7a80;
 
-  --tip-bg: #24292f;
+  --tip-bg: rgba(8, 8, 9, 0.96);
   --tip-fg: #ffffff;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1117;
-    --fg: #e6edf3;
-    --muted: #9198a1;
-    --border: #3d444d;
-    --link: #4493f8;
-
-    --cell-empty: #161b22;
-    --tip-bg: #2f3742;
-  }
+  --font-sans: system-ui, -apple-system, 'Segoe UI', 'Noto Sans JP', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Noto Sans Mono', monospace;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* 地の色は html に置く。body 側を透明にしておくと、
+   背景レイヤー（z-index が負）との重なり順を考えなくて済む */
+html {
+  background: var(--bg);
+}
+
 body {
   margin: 0;
-  background: var(--bg);
+  background: transparent;
   color: var(--fg);
-  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans JP', sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
   color: var(--link);
 }
 
+/* --- 背景レイヤー --- */
+
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 本文が載る中央を確実に沈める。シェーダーを後から派手にしても
+   ここが効いている限りコントラストは壊れない */
+.bg-veil {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* 本文カラムと同じ形の縦帯。max()/min() で挟むことで、画面が狭くて
+     カラムが全幅になったときは自動的に全面が暗くなる */
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.5) 0,
+    rgba(0, 0, 0, 0.8) max(0px, calc(50% - 520px)),
+    rgba(0, 0, 0, 0.8) min(100%, calc(50% + 520px)),
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+
 .page {
+  position: relative;
   max-width: 860px;
   margin: 0 auto;
-  padding: 3rem 1rem 4rem;
+  padding: 5rem 1.25rem 6rem;
 }
+
+/* --- ヘッダー --- */
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.75rem;
-  letter-spacing: 0.02em;
+  font-size: clamp(2.75rem, 11vw, 4.5rem);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1;
 }
 
 .tagline {
-  margin: 0.25rem 0 0;
+  margin: 1rem 0 0;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .summary {
-  margin: 0.75rem 0 0;
-  font-variant-numeric: tabular-nums;
+  margin: 0.5rem 0 0;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+/* --- プロフィールリンク --- */
+
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-links a {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+/* 白黒なのでホバーは反転で見せる */
+.profile-links a:hover,
+.profile-links a:focus-visible {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: #000000;
 }
 
 /* --- ロールの色 ---
@@ -81,7 +160,7 @@ a {
   --fill: var(--role-vj);
 }
 
-/* DJ + VJ は 1 セルを斜めに割る（左下 = 緑 / 右上 = 紫）。
+/* DJ + VJ は 1 セルを斜めに割る（左下 = 明 / 右上 = 中間グレー）。
    ハードストップにすると境界がぼやけない */
 [data-role='DJVJ'] {
   --fill: linear-gradient(45deg, var(--role-dj) 0 50%, var(--role-vj) 50% 100%);
@@ -92,32 +171,35 @@ a {
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  margin: 1rem 0 0;
+  gap: 0.5rem 1.5rem;
+  margin: 1.25rem 0 0;
   padding: 0;
   list-style: none;
-  font-size: 0.8125rem;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .legend li {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 1px;
   background: var(--fill);
 }
 
 /* --- 年セクション --- */
 
 .year {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
+  margin-top: 4rem;
+  padding-top: 1.75rem;
   border-top: 1px solid var(--border);
 }
 
@@ -126,36 +208,42 @@ a {
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.25rem 1rem;
+  gap: 0.5rem 1rem;
 }
 
 .year-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .year-counts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.875rem;
+  gap: 0.25rem 1.125rem;
   margin: 0;
-  font-size: 0.8125rem;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .year-count {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .year-count::before {
   content: '';
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
   background: var(--fill);
 }
 
@@ -165,7 +253,7 @@ a {
 
 .graph-frame {
   container-type: inline-size;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .graph {
@@ -180,7 +268,7 @@ a {
   grid-template-columns: var(--weekday-width) 1fr;
   grid-template-rows: auto auto;
   column-gap: var(--label-gap);
-  row-gap: 0.35rem;
+  row-gap: 0.5rem;
 }
 
 .graph-months {
@@ -189,8 +277,11 @@ a {
   display: grid;
   grid-template-columns: repeat(var(--columns), var(--cell-size));
   column-gap: var(--cell-gap);
-  font-size: 0.6875rem;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .graph-month {
@@ -204,9 +295,10 @@ a {
   display: grid;
   grid-template-rows: repeat(7, var(--cell-size));
   row-gap: var(--cell-gap);
-  font-size: 0.6875rem;
-  line-height: 1;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1;
 }
 
 .graph-weekday {
@@ -226,7 +318,7 @@ a {
 }
 
 .cell {
-  border-radius: max(1px, calc(var(--cell-size) * 0.18));
+  border-radius: max(1px, calc(var(--cell-size) * 0.14));
   background: var(--cell-empty);
 }
 
@@ -244,21 +336,28 @@ a {
   position: relative;
 }
 
+/* 色を変えずに枠だけ出す。白黒だとハイライトの明度を上げる余地がない */
+.cell[data-tooltip]:hover {
+  outline: 1px solid var(--fg);
+  outline-offset: 1px;
+}
+
 .cell[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
   max-width: min(22rem, 90cqw);
   width: max-content;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   background: var(--tip-bg);
   color: var(--tip-fg);
   font-size: 0.75rem;
-  line-height: 1.45;
+  line-height: 1.5;
   white-space: pre-line;
   text-align: left;
   pointer-events: none;
@@ -285,21 +384,28 @@ a {
 /* --- 年ごとの出演リスト（ホバーできない環境向け） --- */
 
 .year-list {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .year-list summary {
   cursor: pointer;
-  font-size: 0.875rem;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.year-list summary:hover {
+  color: var(--fg);
 }
 
 .year-list ol {
-  margin: 0.75rem 0 0;
+  margin: 1rem 0 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.35rem;
+  gap: 0.5rem;
   font-size: 0.875rem;
 }
 
@@ -312,16 +418,20 @@ a {
 
 .year-list time {
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
 .badge {
   justify-self: start;
-  padding: 0.05rem 0.4rem;
-  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
   border: 1px solid var(--border);
-  font-size: 0.6875rem;
+  border-radius: 2px;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
   white-space: nowrap;
 }
 
@@ -334,12 +444,12 @@ a {
 a.event-title {
   text-decoration: underline;
   text-decoration-color: var(--border);
-  text-underline-offset: 0.2em;
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color 0.15s;
 }
 
 a.event-title:hover,
 a.event-title:focus-visible {
-  color: var(--link);
   text-decoration-color: currentColor;
 }
 
@@ -355,7 +465,8 @@ a.event-title:focus-visible {
   }
 
   .graph-months {
-    font-size: 0.5625rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
   }
 
   .year-list li {
@@ -365,5 +476,11 @@ a.event-title:focus-visible {
   .year-list .badge,
   .year-list .event-title {
     grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
   }
 }

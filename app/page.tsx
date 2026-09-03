@@ -4,6 +4,16 @@ import { buildYearGrid, listYears } from '@/lib/heatmap'
 
 const LEGEND = ['DJ', 'VJ', 'DJVJ'] as const
 
+const LINKS = [
+  { label: 'X', href: 'https://twitter.com/zyzyzy_vl' },
+  { label: 'YouTube', href: 'https://www.youtube.com/@zyzyzy012' },
+  { label: 'Mixcloud', href: 'https://www.mixcloud.com/melocilde/' },
+  {
+    label: 'VRChat',
+    href: 'https://vrchat.com/home/user/usr_198bd4ec-e7b6-4ef7-a009-52325524fa68',
+  },
+] as const
+
 export default function Page() {
   const appearances = loadAppearances()
   const years = listYears(appearances)
@@ -20,6 +30,16 @@ export default function Page() {
             {appearances.length} 件 ({first.date} 〜 {last.date})
           </p>
         )}
+        <ul className="profile-links">
+          {LINKS.map((link) => (
+            <li key={link.label}>
+              <a href={link.href} target="_blank" rel="me noreferrer">
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+
         <ul className="legend">
           {LEGEND.map((role) => (
             <li key={role}>
