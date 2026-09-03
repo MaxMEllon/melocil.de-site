@@ -33,15 +33,6 @@ export default function Page() {
       {years.map((year) => (
         <ContributionGraph key={year} grid={buildYearGrid(year, appearances)} />
       ))}
-
-      <footer className="page-footer">
-        <p>
-          出典:{' '}
-          <a href="https://lit.link/melocilde" rel="noreferrer">
-            lit.link/melocilde
-          </a>
-        </p>
-      </footer>
     </main>
   )
 }
