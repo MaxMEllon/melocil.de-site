@@ -325,19 +325,20 @@ a {
   white-space: nowrap;
 }
 
-/* 告知ツイート（無ければ X 検索）へのリンク。
-   フォールバックかどうかは data-link に出しているが、
-   見に来た人には区別が要らないので見た目は揃えている */
+/* 告知ツイートへのリンク。告知が見つからなかった回はリンクにせず素の文字で出す */
 .event-title {
   overflow-wrap: anywhere;
   color: inherit;
+}
+
+a.event-title {
   text-decoration: underline;
   text-decoration-color: var(--border);
   text-underline-offset: 0.2em;
 }
 
-.event-title:hover,
-.event-title:focus-visible {
+a.event-title:hover,
+a.event-title:focus-visible {
   color: var(--link);
   text-decoration-color: currentColor;
 }
