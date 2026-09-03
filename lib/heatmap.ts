@@ -21,7 +21,7 @@ export type YearGrid = {
   /** 53列 × 7行。columns[i][j] の j は 0=日曜 〜 6=土曜 */
   columns: Cell[][]
   monthLabels: MonthLabel[]
-  /** その年の出演（日付昇順） */
+  /** その年の出演（新しい順。年の並びと揃えている） */
   appearances: Appearance[]
   /** セル数ではなくイベント件数 */
   counts: Record<Role, number> & { total: number }
@@ -112,7 +112,7 @@ export function buildYearGrid(year: number, appearances: Appearance[]): YearGrid
     counts[appearance.role] += 1
   }
 
-  return { year, columns, monthLabels, appearances: inYear, counts }
+  return { year, columns, monthLabels, appearances: [...inYear].reverse(), counts }
 }
 
 /** 出演がある年を降順で返す */

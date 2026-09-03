@@ -9,7 +9,7 @@ export type Appearance = {
   date: string
   title: string
   role: Role
-  /** 告知ツイートの URL。省略すると X 検索へのリンクにフォールバックする */
+  /** 告知ツイート（本人の投稿が引用している主催側の告知）の URL。見つからなかった回は省略し、リンクにしない */
   url?: string
 }
 

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
+
+import { ShaderBackground } from '@/components/ShaderBackground'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -10,7 +12,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        {/* 背景の 2 枚。ベイルはシェーダーの輝度上限とは別に、本文の下を必ず暗く保つ保険 */}
+        <ShaderBackground />
+        <div className="bg-veil" aria-hidden="true" />
+        {children}
+      </body>
     </html>
   )
 }
