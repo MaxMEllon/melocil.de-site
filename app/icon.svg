@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="melocil.de">
+  <!-- サイトの DJ + VJ セル（左下 = 白 / 右上 = 中間グレー）をそのまま印にしている。
+       globals.css の [data-role='DJVJ'] と同じ 45deg の割り方 -->
+  <rect width="32" height="32" rx="6" fill="#000000" />
+  <clipPath id="tile">
+    <rect x="3" y="3" width="26" height="26" rx="3" />
+  </clipPath>
+  <g clip-path="url(#tile)">
+    <polygon points="3,3 29,3 29,29" fill="#7a7a80" />
+    <polygon points="3,3 3,29 29,29" fill="#ffffff" />
+  </g>
+</svg>
