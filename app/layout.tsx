@@ -6,7 +6,7 @@ import './globals.css'
 
 const SITE_URL = 'https://melocil.de'
 const TITLE = 'melocil.de'
-const DESCRIPTION = 'めろちだ（MaxMEllon）の DJ / VJ 出演履歴'
+const DESCRIPTION = 'めろちだ の DJ / VJ 出演履歴'
 const OG_IMAGE = {
   url: '/og.png',
   width: 1200,
