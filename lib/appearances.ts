@@ -9,6 +9,8 @@ export type Appearance = {
   date: string
   title: string
   role: Role
+  /** リアル会場での出演。VRChat 内の回には付けない（省略時は false） */
+  real?: boolean
   /** 告知ツイート（本人の投稿が引用している主催側の告知）の URL。見つからなかった回は省略し、リンクにしない */
   url?: string
   /** public/flyers/ 配下のフライヤー画像のファイル名。告知に画像が無い回は省略する */
@@ -20,6 +22,11 @@ export const ROLE_LABELS: Record<Role, string> = {
   VJ: 'VJ',
   DJVJ: 'DJ + VJ',
 }
+
+// リアル会場での出演はタイトル末尾にもこの印を付けて表示する。real と二重に持つので、
+// 片方だけ書いた入稿は下でビルドごと落とす。「EXTREME in Real vol.01 <Real>」のように
+// 本文にも Real を含む回があるため、判定は末尾一致で行う（部分一致は不可）
+const REAL_SUFFIX = ' <Real>'
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 // ディレクトリを跨がせないよう、区切り文字を含まないファイル名だけ通す
@@ -59,7 +66,10 @@ function parseOne(value: unknown, index: number): Appearance {
     throw new Error(`${at}.role: ${ROLES.join(' | ')} のいずれかが必要です (${JSON.stringify(role)})`)
   }
 
-  const { url, flyer } = value as Record<string, unknown>
+  const { real, url, flyer } = value as Record<string, unknown>
+  if (real !== undefined && typeof real !== 'boolean') {
+    throw new Error(`${at}.real: 真偽値が必要です (${JSON.stringify(real)})`)
+  }
   if (url !== undefined && (typeof url !== 'string' || !url.startsWith('https://'))) {
     throw new Error(`${at}.url: https:// で始まる URL が必要です (${JSON.stringify(url)})`)
   }
@@ -69,7 +79,16 @@ function parseOne(value: unknown, index: number): Appearance {
     )
   }
 
-  const appearance: Appearance = { date, title: title.trim(), role }
+  const trimmedTitle = title.trim()
+  if (trimmedTitle.endsWith(REAL_SUFFIX) !== (real === true)) {
+    throw new Error(
+      `${at}: real と title 末尾の "${REAL_SUFFIX.trim()}" が食い違っています` +
+        ` (real: ${JSON.stringify(real)}, title: ${JSON.stringify(trimmedTitle)})`,
+    )
+  }
+
+  const appearance: Appearance = { date, title: trimmedTitle, role }
+  if (real !== undefined) appearance.real = real
   if (url !== undefined) appearance.url = url
   if (flyer !== undefined) appearance.flyer = flyer
   return appearance

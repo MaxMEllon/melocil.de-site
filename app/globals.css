@@ -330,6 +330,23 @@ a {
   background: transparent;
 }
 
+/* タイトル末尾が <Real> の回 = リアル会場での出演。白黒配色なので明度で差を付ける
+   余地が無く、塗りも外形も変えずにセルの中央を地の色でくり抜いて区別する。
+   透明ではなく --bg で塗るのが肝で、透かすと背景のシェーダーが穴から出てしまう。
+   data-real が付くセルは必ず data-role も持つので、position は下の宣言に乗る */
+.cell[data-real]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* 狭い画面ではセルが 5px 前後まで縮むので、下限を切って穴を消さない */
+  width: max(2px, calc(var(--cell-size) * 0.38));
+  height: max(2px, calc(var(--cell-size) * 0.38));
+  border-radius: 50%;
+  background: var(--bg);
+}
+
 /* --- ホバーで出る告知フライヤー（JS なし） ---
    .tip を display:none から始めるのが肝で、こうしておくと lazy な img は
    ホバーして初めて読み込まれる。全 79 枚を最初に取りに行かせない。 */

@@ -8,6 +8,8 @@ export type Cell = {
   events: Appearance[]
   /** 表示色を決める合成済みロール。出演が無い日は null */
   role: Role | null
+  /** その日の出演のどれかがリアル会場なら true */
+  real: boolean
 }
 
 export type MonthLabel = {
@@ -88,6 +90,7 @@ export function buildYearGrid(year: number, appearances: Appearance[]): YearGrid
         inYear: date.startsWith(`${year}-`),
         events,
         role: mergeRoles(events),
+        real: events.some((event) => event.real === true),
       })
     }
     columns.push(column)

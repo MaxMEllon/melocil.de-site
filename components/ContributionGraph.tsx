@@ -111,6 +111,7 @@ export function ContributionGraph({ grid }: { grid: YearGrid }) {
                     key={cell.date}
                     className="cell"
                     data-role={cell.role}
+                    data-real={cell.real ? '' : undefined}
                     data-tip-align={tipAlign(columnIndex, columnCount)}
                   >
                     <CellTip cell={cell} />
