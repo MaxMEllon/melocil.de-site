@@ -349,14 +349,21 @@ a {
 
 /* --- ホバーで出る告知フライヤー（JS なし） ---
    .tip を display:none から始めるのが肝で、こうしておくと lazy な img は
-   ホバーして初めて読み込まれる。全 79 枚を最初に取りに行かせない。 */
+   ホバーして初めて読み込まれる。全 79 枚を最初に取りに行かせない。
+
+   固定表示も JS を足さずに :focus で賄う。セルは tabindex="-1" なので
+   フォーカスはクリック（タップ）でしか入らず、外側をクリックすれば外れて消える。
+   ホバーできない端末でも吹き出しに手が届くという副作用付き。 */
 
 .cell[data-role] {
   position: relative;
+  cursor: pointer;
 }
 
-/* 色を変えずに枠だけ出す。白黒だとハイライトの明度を上げる余地がない */
-.cell[data-role]:hover {
+/* 色を変えずに枠だけ出す。白黒だとハイライトの明度を上げる余地がない。
+   固定中のセルもこれで分かるので、:focus に別の見せ方は用意しない */
+.cell[data-role]:hover,
+.cell[data-role]:focus {
   outline: 1px solid var(--fg);
   outline-offset: 1px;
   z-index: 3;
@@ -379,8 +386,15 @@ a {
   pointer-events: none;
 }
 
-.cell[data-role]:hover .tip {
+.cell[data-role]:hover .tip,
+.cell[data-role]:focus .tip {
   display: flex;
+}
+
+/* 芝にマウスが乗っている間はホバー側だけを見せる。
+   そうしないと固定した吹き出しとホバーの吹き出しが二つ並ぶ */
+.graph-cells:hover .cell[data-role]:focus:not(:hover) .tip {
+  display: none;
 }
 
 /* フライヤーの縦横比はまちまち（79 枚中 71 枚が 3:4 前後）。枠は 3:4 で固定し、

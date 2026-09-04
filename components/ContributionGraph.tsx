@@ -9,6 +9,13 @@ const WEEKDAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
 /** 端の列はツールチップが吹き出しごと画面外へ出るので、列位置からビルド時に寄せ方を決める */
 const EDGE_COLUMNS = 12
 
+/**
+ * クリックで吹き出しを固定するためだけに置くフォーカス（出す側は CSS の :focus）。
+ * -1 にするとクリックでしかフォーカスが入らないので、タブ順は 1 つも増えず、
+ * 読み上げから外れている role="img" の中にタブストップを作らずに済む。
+ */
+const PIN_TAB_INDEX = -1
+
 function tipAlign(column: number, columnCount: number): 'start' | 'end' | undefined {
   if (column < EDGE_COLUMNS) return 'start'
   if (column >= columnCount - EDGE_COLUMNS) return 'end'
@@ -113,6 +120,7 @@ export function ContributionGraph({ grid }: { grid: YearGrid }) {
                     data-role={cell.role}
                     data-real={cell.real ? '' : undefined}
                     data-tip-align={tipAlign(columnIndex, columnCount)}
+                    tabIndex={PIN_TAB_INDEX}
                   >
                     <CellTip cell={cell} />
                   </div>
