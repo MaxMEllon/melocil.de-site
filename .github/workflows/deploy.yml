@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # cue-parser 側のビルドが更新されたときに叩かれる
+  repository_dispatch:
+    types: [cue-parser-updated]
 
 permissions:
   contents: read
@@ -32,6 +35,14 @@ jobs:
 
       - name: Build (next build -> out/)
         run: npm run build
+
+      # melocil.de/cue-parser を配信する。
+      # MaxMEllon/cue-parser の web-dist ブランチにビルド済みの静的サイトが置かれている。
+      - name: Fetch cue-parser web build
+        run: |
+          mkdir -p out/cue-parser
+          curl -fsSL https://github.com/MaxMEllon/cue-parser/archive/refs/heads/web-dist.tar.gz \
+            | tar xz --strip-components=1 -C out/cue-parser
 
       - uses: actions/upload-pages-artifact@v3
         with:
