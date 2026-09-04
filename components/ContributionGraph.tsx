@@ -7,7 +7,7 @@ import type { Cell, YearGrid } from '@/lib/heatmap'
 const WEEKDAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', '']
 
 /** 端の列はツールチップが吹き出しごと画面外へ出るので、列位置からビルド時に寄せ方を決める */
-const EDGE_COLUMNS = 8
+const EDGE_COLUMNS = 12
 
 function tipAlign(column: number, columnCount: number): 'start' | 'end' | undefined {
   if (column < EDGE_COLUMNS) return 'start'
@@ -19,11 +19,34 @@ function formatMonthDay(date: string): string {
   return `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`
 }
 
-function tooltipFor(cell: Cell): string {
-  return [
-    formatMonthDay(cell.date),
-    ...cell.events.map((event) => `${ROLE_LABELS[event.role]} — ${event.title}`),
-  ].join('\n')
+/**
+ * ホバーで出るフライヤー。中身は下の出演リストと同じなので、読み上げからは外す。
+ * .tip は display:none から始めるので、ホバーするまで img は読み込まれない。
+ */
+function CellTip({ cell }: { cell: Cell }) {
+  return (
+    <span className="tip" aria-hidden="true">
+      {cell.events.map((event) => (
+        <span className="tip-event" key={`${event.date}-${event.title}`}>
+          {/* 告知に画像が無い回は空箱を出さず、文字だけの小さな吹き出しにする */}
+          {event.flyer && (
+            <img
+              className="tip-flyer"
+              src={`/flyers/${event.flyer}`}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          <span className="tip-caption">
+            {formatMonthDay(cell.date)} · {ROLE_LABELS[event.role]}
+            <br />
+            {event.title}
+          </span>
+        </span>
+      ))}
+    </span>
+  )
 }
 
 export function ContributionGraph({ grid }: { grid: YearGrid }) {
@@ -88,9 +111,10 @@ export function ContributionGraph({ grid }: { grid: YearGrid }) {
                     key={cell.date}
                     className="cell"
                     data-role={cell.role}
-                    data-tooltip={tooltipFor(cell)}
                     data-tip-align={tipAlign(columnIndex, columnCount)}
-                  />
+                  >
+                    <CellTip cell={cell} />
+                  </div>
                 ),
               ),
             )}

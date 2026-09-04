@@ -11,6 +11,8 @@ export type Appearance = {
   role: Role
   /** 告知ツイート（本人の投稿が引用している主催側の告知）の URL。見つからなかった回は省略し、リンクにしない */
   url?: string
+  /** public/flyers/ 配下のフライヤー画像のファイル名。告知に画像が無い回は省略する */
+  flyer?: string
 }
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -20,6 +22,8 @@ export const ROLE_LABELS: Record<Role, string> = {
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+// ディレクトリを跨がせないよう、区切り文字を含まないファイル名だけ通す
+const FLYER_PATTERN = /^[\w-]+\.webp$/
 
 function isRealDate(date: string): boolean {
   const [year, month, day] = date.split('-').map(Number)
@@ -55,14 +59,20 @@ function parseOne(value: unknown, index: number): Appearance {
     throw new Error(`${at}.role: ${ROLES.join(' | ')} のいずれかが必要です (${JSON.stringify(role)})`)
   }
 
-  const { url } = value as Record<string, unknown>
+  const { url, flyer } = value as Record<string, unknown>
   if (url !== undefined && (typeof url !== 'string' || !url.startsWith('https://'))) {
     throw new Error(`${at}.url: https:// で始まる URL が必要です (${JSON.stringify(url)})`)
   }
+  if (flyer !== undefined && (typeof flyer !== 'string' || !FLYER_PATTERN.test(flyer))) {
+    throw new Error(
+      `${at}.flyer: public/flyers/ 配下の .webp のファイル名が必要です (${JSON.stringify(flyer)})`,
+    )
+  }
 
-  return url === undefined
-    ? { date, title: title.trim(), role }
-    : { date, title: title.trim(), role, url }
+  const appearance: Appearance = { date, title: title.trim(), role }
+  if (url !== undefined) appearance.url = url
+  if (flyer !== undefined) appearance.flyer = flyer
+  return appearance
 }
 
 /** JSON を検証しつつ日付昇順で返す（JSON 側の並び順には依存しない） */

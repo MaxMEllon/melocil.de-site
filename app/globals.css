@@ -330,52 +330,72 @@ a {
   background: transparent;
 }
 
-/* --- ツールチップ（JS なし） --- */
+/* --- ホバーで出る告知フライヤー（JS なし） ---
+   .tip を display:none から始めるのが肝で、こうしておくと lazy な img は
+   ホバーして初めて読み込まれる。全 79 枚を最初に取りに行かせない。 */
 
-.cell[data-tooltip] {
+.cell[data-role] {
   position: relative;
 }
 
 /* 色を変えずに枠だけ出す。白黒だとハイライトの明度を上げる余地がない */
-.cell[data-tooltip]:hover {
+.cell[data-role]:hover {
   outline: 1px solid var(--fg);
   outline-offset: 1px;
+  z-index: 3;
 }
 
-.cell[data-tooltip]::after {
-  content: attr(data-tooltip);
+.tip {
   position: absolute;
+  /* 上に開く。芝の上には年見出しと節の余白があり、下より場所を取りやすい */
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2;
-  max-width: min(22rem, 90cqw);
+  z-index: 3;
+  display: none;
+  gap: 0.625rem;
   width: max-content;
-  padding: 0.45rem 0.65rem;
+  padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--tip-bg);
-  color: var(--tip-fg);
-  font-size: 0.75rem;
-  line-height: 1.5;
-  white-space: pre-line;
-  text-align: left;
   pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
 }
 
-.cell[data-tooltip]:hover::after {
-  opacity: 1;
-  visibility: visible;
+.cell[data-role]:hover .tip {
+  display: flex;
 }
 
-.cell[data-tip-align='start']::after {
+/* フライヤーの縦横比はまちまち（79 枚中 71 枚が 3:4 前後）。枠は 3:4 で固定し、
+   はみ出す絵は contain で収める。こうすると吹き出しの大きさが回ごとに変わらない */
+.tip-flyer {
+  display: block;
+  width: min(258px, 62cqw);
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  border-radius: 3px;
+  background: #000000;
+}
+
+.tip-caption {
+  display: block;
+  max-width: min(258px, 62cqw);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+
+.tip-flyer + .tip-caption {
+  margin-top: 0.5rem;
+}
+
+.cell[data-tip-align='start'] .tip {
   left: 0;
   transform: none;
 }
 
-.cell[data-tip-align='end']::after {
+.cell[data-tip-align='end'] .tip {
   left: auto;
   right: 0;
   transform: none;
