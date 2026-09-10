@@ -14,6 +14,8 @@ const LINKS = [
   },
 ] as const
 
+const TOOLS = [{ label: 'cue parser', href: '/cue-parser/' }] as const
+
 export default function Page() {
   const appearances = loadAppearances()
   const years = listYears(appearances)
@@ -36,6 +38,14 @@ export default function Page() {
               <a href={link.href} target="_blank" rel="me noreferrer">
                 {link.label}
               </a>
+            </li>
+          ))}
+        </ul>
+
+        <ul className="profile-links tool-links">
+          {TOOLS.map((tool) => (
+            <li key={tool.label}>
+              <a href={tool.href}>{tool.label}</a>
             </li>
           ))}
         </ul>

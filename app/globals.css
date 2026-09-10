@@ -148,6 +148,12 @@ a {
   color: #000000;
 }
 
+/* /cue-parser は next の route ではなく out/ に後から展開する静的ビルドなので、
+   next/link ではなく素の <a> で飛ばす。並びはプロフィールリンクの続きに見せる */
+.tool-links {
+  margin-top: 0.5rem;
+}
+
 /* --- ロールの色 ---
    [data-role] は塗りを --fill に置くだけにして、実際に background へ入れるかは
    使う側（セル・凡例・件数）が決める。こうしないと .cell の背景と後勝ちで衝突する。 */
