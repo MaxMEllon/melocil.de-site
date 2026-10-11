@@ -4,7 +4,12 @@ import { ShowcaseClip } from '@/components/ShowcaseClip'
 
 // 動画は X から落として public/showcase/<tweet id>.mp4 に置いている。
 // ポスターは同名の .jpg（1 秒目のフレーム）
-const CLIPS = [
+// 1 ツイートから複数本載せるときは file に <tweet id>-<何本目> を指定する
+type Clip = { id: string; file?: string; caption: string }
+
+const CLIPS: readonly Clip[] = [
+  { id: '2108964926547239315', file: '2108964926547239315-1', caption: '#SyntheticSense' },
+  { id: '2108964926547239315', file: '2108964926547239315-4', caption: '#SyntheticSense' },
   // 4 本付いたツイートの 4 本目
   { id: '2100261718899503347', caption: '#CULT_VRC' },
   { id: '2086865145930895432', caption: '#ZEN_0809' },
@@ -14,7 +19,7 @@ const CLIPS = [
   // 4 本付いたツイートの 1 本目
   { id: '2055834793011814488', caption: '' },
   { id: '2033370883876860058', caption: '#syncspin1st' },
-] as const
+]
 
 // DJ は YouTube のミックスを埋め込む。タイトルは埋め込み側に出るのでラベルは付けない。
 // 公開日の新しい順
@@ -55,10 +60,10 @@ export default function ShowcasePage() {
       </h2>
       <ul className="showcase">
         {CLIPS.map((clip) => (
-          <li key={clip.id}>
+          <li key={clip.file ?? clip.id}>
             <ShowcaseClip
-              src={`/showcase/${clip.id}.mp4`}
-              poster={`/showcase/${clip.id}.jpg`}
+              src={`/showcase/${clip.file ?? clip.id}.mp4`}
+              poster={`/showcase/${clip.file ?? clip.id}.jpg`}
             />
             {clip.caption && (
               <a
