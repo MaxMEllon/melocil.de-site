@@ -94,15 +94,6 @@ a {
   line-height: 1;
 }
 
-.tagline {
-  margin: 1rem 0 0;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
 .summary {
   margin: 0.5rem 0 0;
   color: var(--muted);
@@ -543,23 +534,49 @@ a.event-title:focus-visible {
 }
 
 /* --- showcase ---
-   ページごと画面の左右いっぱいに使う。動画同士は隙間なく 2 列で敷き詰め、
+   画面の左右いっぱいに使う。VJ の先頭 1 本だけ全幅のヒーローにして、
+   残りの動画同士は隙間なく 3 列で敷き詰める。
    出典リンクは下に置くと隙間になるので左上に重ねる。
-   ヘッダーと VJ / DJ の見出しだけ .page と同じ 1.25rem の余白を左右に取る */
+   VJ / DJ の見出しだけ .page と同じ 1.25rem の余白を左右に取る */
 
-.page-wide {
-  max-width: none;
-  padding-left: 0;
-  padding-right: 0;
+/* トップページではヘッダー → showcase（全幅）→ 出演履歴 の順に積む。
+   .page の上下の余白をそのまま使うと継ぎ目が空きすぎるので、
+   間の余白は showcase の見出しの margin-top だけに任せる */
+.showcase-section {
+  position: relative;
 }
 
-.page-wide .page-header {
-  padding: 0 1.25rem;
+.page-intro {
+  padding-top: 2.5rem;
+  padding-bottom: 0;
+}
+
+/* 開いた 1 画面目にヒーロー映像が丸ごと収まるよう、トップのヘッダーは
+   サイト名とリンクを横 1 列に寄せて縦を詰める（狭い画面では折り返す） */
+.page-intro .page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+}
+
+.page-intro .header-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-intro .profile-links {
+  margin: 0;
+}
+
+.page-history {
+  padding-top: 4rem;
 }
 
 .showcase {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0;
   margin: 3rem 0 0;
   padding: 0;
@@ -568,6 +585,21 @@ a.event-title:focus-visible {
 
 .showcase li {
   position: relative;
+}
+
+/* 最終行が 3 本に満たないときは、最後の 1 本を横に伸ばして穴を残さない */
+.showcase li:last-child:nth-child(3n + 1) {
+  grid-column: span 3;
+}
+
+.showcase li:last-child:nth-child(3n + 2) {
+  grid-column: span 2;
+}
+
+/* 横に伸びた最後の 1 本は 16:9 のままだとヒーロー並みに縦長になるので、
+   高さで頭打ちにして上下を切った横長の帯にする */
+.showcase li:last-child video {
+  max-height: 60vh;
 }
 
 .showcase-title {
@@ -600,8 +632,35 @@ a.event-title:focus-visible {
   fill: currentColor;
 }
 
-.showcase-title + .showcase {
+.showcase-title + .showcase,
+.showcase-title + .showcase-hero {
   margin-top: 1rem;
+}
+
+.showcase-hero + .showcase {
+  margin-top: 0;
+}
+
+.showcase-section > .showcase-title:first-child {
+  margin-top: 2rem;
+}
+
+/* ヒーローは開いた 1 画面目に映像が丸ごと収まる高さで頭打ちにする。
+   --hero-top はページ先頭からヒーロー上端までの高さ（ヘッダー + VJ 見出し）。
+   高さで縮んだぶんは切らずに左右を黒帯にする */
+.showcase-hero {
+  --hero-top: 12.75rem;
+  position: relative;
+  background: #000000;
+}
+
+.showcase-hero video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100svh - var(--hero-top));
+  object-fit: contain;
+  background: #000000;
 }
 
 .showcase video,
@@ -614,11 +673,29 @@ a.event-title:focus-visible {
   background: #000000;
 }
 
-/* スマホでは横並びをやめて 1 列にする。
-   上の .showcase より後ろに置かないと 2 列指定に負ける */
+/* 中くらいの幅では 2 列、スマホでは横並びをやめて 1 列にする。
+   上の .showcase より後ろに置かないと 3 列指定と端数の span に負ける */
+@media (max-width: 56rem) {
+  .showcase {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .showcase li:last-child:nth-child(n) {
+    grid-column: auto;
+  }
+
+  .showcase li:last-child:nth-child(2n + 1) {
+    grid-column: span 2;
+  }
+}
+
 @media (max-width: 34rem) {
   .showcase {
     grid-template-columns: 1fr;
+  }
+
+  .showcase li:last-child:nth-child(n) {
+    grid-column: auto;
   }
 }
 
@@ -634,7 +711,7 @@ a.event-title:focus-visible {
   cursor: pointer;
 }
 
-.showcase-play svg {
+.showcase-play > svg {
   width: 3.5rem;
   height: 3.5rem;
   padding: 0.9rem;
@@ -646,13 +723,41 @@ a.event-title:focus-visible {
     background-color 0.15s;
 }
 
-.showcase-play:hover svg,
-.showcase-play:focus-visible svg {
+.showcase-play:hover > svg,
+.showcase-play:focus-visible > svg {
   background: rgba(0, 0, 0, 0.85);
 }
 
-.showcase-play[data-playing='true'] svg {
+.showcase-play[data-playing='true'] > svg {
   opacity: 0;
+}
+
+/* ヒーローがミュートで流れている間、押せば音が出ることを右下で知らせる */
+.showcase-mute {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  transition: background-color 0.15s;
+}
+
+.showcase-play:hover .showcase-mute,
+.showcase-play:focus-visible .showcase-mute {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.showcase-mute svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
 }
 
 /* ボタンより手前に出してリンクを押せるようにする */

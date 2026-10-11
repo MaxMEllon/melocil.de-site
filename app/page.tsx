@@ -1,4 +1,5 @@
 import { ContributionGraph } from '@/components/ContributionGraph'
+import { Showcase } from '@/components/Showcase'
 import { loadAppearances, ROLE_LABELS } from '@/lib/appearances'
 import { buildYearGrid, listYears } from '@/lib/heatmap'
 
@@ -16,7 +17,6 @@ const LINKS = [
 ] as const
 
 const TOOLS = [
-  { label: 'showcase', href: '/showcase/' },
   { label: 'cue parser', href: '/cue-parser/' },
 ] as const
 
@@ -27,33 +27,41 @@ export default function Page() {
   const last = appearances.at(-1)
 
   return (
-    <main className="page">
-      <header className="page-header">
-        <h1>melocil.de</h1>
-        <p className="tagline">めろちだ — DJ / VJ 出演履歴</p>
+    <main>
+      {/* ヘッダーの下に showcase を全幅で並べ、出演履歴は 860px の本文カラムでその後に続ける */}
+      <div className="page page-intro">
+        <header className="page-header">
+          <h1>melocil.de</h1>
+          <div className="header-links">
+            <ul className="profile-links">
+              {LINKS.map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} target="_blank" rel="me noreferrer">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <ul className="profile-links tool-links">
+              {TOOLS.map((tool) => (
+                <li key={tool.label}>
+                  <a href={tool.href}>{tool.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </header>
+      </div>
+
+      <Showcase />
+
+      <div className="page page-history">
         {first && last && (
           <p className="summary">
             {appearances.length} 件 ({first.date} 〜 {last.date})
           </p>
         )}
-        <ul className="profile-links">
-          {LINKS.map((link) => (
-            <li key={link.label}>
-              <a href={link.href} target="_blank" rel="me noreferrer">
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <ul className="profile-links tool-links">
-          {TOOLS.map((tool) => (
-            <li key={tool.label}>
-              <a href={tool.href}>{tool.label}</a>
-            </li>
-          ))}
-        </ul>
-
         <ul className="legend">
           {LEGEND.map((role) => (
             <li key={role}>
@@ -62,11 +70,11 @@ export default function Page() {
             </li>
           ))}
         </ul>
-      </header>
 
-      {years.map((year) => (
-        <ContributionGraph key={year} grid={buildYearGrid(year, appearances)} />
-      ))}
+        {years.map((year) => (
+          <ContributionGraph key={year} grid={buildYearGrid(year, appearances)} />
+        ))}
+      </div>
     </main>
   )
 }
