@@ -46,13 +46,24 @@ jobs:
 
       # melocil.de/design-system を配信する。
       # MaxMEllon/design-system の main の site/（自己完結の 1 ページ）と、各アプリ向けの生成物 dist/。
+      # design-system は非公開なので、読み取り専用トークン（secret DESIGN_SYSTEM_READ_TOKEN、
+      # design-system の Contents: Read-only）で取得する。
       - name: Fetch design-system docs
+        uses: actions/checkout@v4
+        with:
+          repository: MaxMEllon/design-system
+          ref: main
+          token: ${{ secrets.DESIGN_SYSTEM_READ_TOKEN }}
+          path: design-system
+          sparse-checkout: |
+            site
+            dist
+
+      - name: Place design-system docs
         run: |
           mkdir -p out/design-system
-          curl -fsSL https://github.com/MaxMEllon/design-system/archive/refs/heads/main.tar.gz \
-            | tar xz --strip-components=1 -C out/design-system design-system-main/site design-system-main/dist
-          mv out/design-system/site/* out/design-system/
-          rmdir out/design-system/site
+          cp -r design-system/site/. out/design-system/
+          cp -r design-system/dist out/design-system/dist
 
       - uses: actions/upload-pages-artifact@v3
         with:
