@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # cue-parser / design-system 側が更新されたときに叩かれる
+  # cue-parser / design-system / lemona.de 側が更新されたときに叩かれる
   repository_dispatch:
-    types: [cue-parser-updated, design-system-updated]
+    types: [cue-parser-updated, design-system-updated, lemonade-docs-updated]
 
 permissions:
   contents: read
@@ -20,6 +20,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      HAS_LEMONADE_TOKEN: ${{ secrets.LEMONADE_READ_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -64,6 +66,29 @@ jobs:
           mkdir -p out/design-system
           cp -r design-system/site/. out/design-system/
           cp -r design-system/dist out/design-system/dist
+
+      # melocil.de/lemona.de を配信する。
+      # MaxMEllon/lemona.de（非公開）の web-dist ブランチにビルド済みのドキュメント（MkDocs）が置かれている。
+      # 読み取り専用トークン（secret LEMONADE_READ_TOKEN、lemona.de の Contents: Read-only）で取得する。
+      # トークンが未設定か取得に失敗したときは飛ばし、ほかのページのデプロイは止めない。
+      - name: Fetch lemona.de docs
+        if: env.HAS_LEMONADE_TOKEN == 'true'
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: MaxMEllon/lemona.de
+          ref: web-dist
+          token: ${{ secrets.LEMONADE_READ_TOKEN }}
+          path: lemonade-docs
+
+      - name: Place lemona.de docs
+        run: |
+          if [ ! -f lemonade-docs/index.html ]; then
+            echo "no lemona.de docs build; skipping /lemona.de/"
+            exit 0
+          fi
+          mkdir -p out/lemona.de
+          rsync -a --exclude .git lemonade-docs/ out/lemona.de/
 
       - uses: actions/upload-pages-artifact@v3
         with:
