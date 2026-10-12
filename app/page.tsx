@@ -19,6 +19,7 @@ const LINKS = [
 const TOOLS = [
   { label: 'cue parser', href: '/cue-parser/' },
   { label: 'design system', href: '/design-system/' },
+  { label: 'lemona.de', href: '/lemona.de/' },
 ] as const
 
 export default function Page() {
