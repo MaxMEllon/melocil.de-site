@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # cue-parser 側のビルドが更新されたときに叩かれる
+  # cue-parser / design-system 側が更新されたときに叩かれる
   repository_dispatch:
-    types: [cue-parser-updated]
+    types: [cue-parser-updated, design-system-updated]
 
 permissions:
   contents: read
@@ -43,6 +43,16 @@ jobs:
           mkdir -p out/cue-parser
           curl -fsSL https://github.com/MaxMEllon/cue-parser/archive/refs/heads/web-dist.tar.gz \
             | tar xz --strip-components=1 -C out/cue-parser
+
+      # melocil.de/design-system を配信する。
+      # MaxMEllon/design-system の main の site/（自己完結の 1 ページ）と、各アプリ向けの生成物 dist/。
+      - name: Fetch design-system docs
+        run: |
+          mkdir -p out/design-system
+          curl -fsSL https://github.com/MaxMEllon/design-system/archive/refs/heads/main.tar.gz \
+            | tar xz --strip-components=1 -C out/design-system design-system-main/site design-system-main/dist
+          mv out/design-system/site/* out/design-system/
+          rmdir out/design-system/site
 
       - uses: actions/upload-pages-artifact@v3
         with:
