@@ -11,7 +11,7 @@ const OG_IMAGE = {
   url: '/og.png',
   width: 1200,
   height: 630,
-  alt: 'melocil.de — めろちだ の DJ / VJ 出演履歴',
+  alt: 'melocil.de — めろちだ — DJ / VJ。VJ 映像・DJ ミックス・出演履歴',
 }
 
 export const metadata: Metadata = {
