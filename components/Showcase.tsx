@@ -3,6 +3,8 @@ import { ShowcaseClip } from '@/components/ShowcaseClip'
 // 動画は X から落として public/showcase/<tweet id>.mp4 に置いている。
 // ポスターは同名の .jpg（1 秒目のフレーム）
 // 1 ツイートから複数本載せるときは file に <tweet id>-<何本目> を指定する
+// 自動再生するヒーロー（先頭の 1 本）は scripts/encode-hls.sh で
+// public/showcase/hls/<file>/ に HLS を書き出しておき、そちらを流す
 type Clip = { id: string; file?: string; caption: string }
 
 const CLIPS: readonly Clip[] = [
@@ -34,7 +36,12 @@ function ClipItem({ clip, hero = false }: { clip: Clip; hero?: boolean }) {
   const file = clip.file ?? clip.id
   return (
     <>
-      <ShowcaseClip src={`/showcase/${file}.mp4`} poster={`/showcase/${file}.jpg`} hero={hero} />
+      <ShowcaseClip
+        src={`/showcase/${file}.mp4`}
+        hls={hero ? `/showcase/hls/${file}/index.m3u8` : undefined}
+        poster={`/showcase/${file}.jpg`}
+        hero={hero}
+      />
       {clip.caption && (
         <a
           className="showcase-source"

@@ -5,13 +5,17 @@ import { useEffect, useRef, useState } from 'react'
 // 標準のコントロール（シークバー等）は出さず、動画全面を再生/一時停止のボタンにする。
 // 停止中だけ中央に ▶ を出す。
 // hero は showcase の先頭に全幅で置く 1 本。読み込んだらミュートでループ再生しておき、
-// 全面のボタンは一時停止ではなく音の出し入れにする
+// 全面のボタンは一時停止ではなく音の出し入れにする。
+// hls を渡すとそちらを流す。HLS を素で再生できないブラウザでは hls.js を後から読み込み、
+// それも使えない（MSE が無い）ときだけ src の mp4 に戻す
 export function ShowcaseClip({
   src,
+  hls,
   poster,
   hero = false,
 }: {
   src: string
+  hls?: string
   poster: string
   hero?: boolean
 }) {
@@ -21,13 +25,46 @@ export function ShowcaseClip({
 
   useEffect(() => {
     const video = videoRef.current
-    if (!hero || !video) return
-    // 動きを減らす設定の人には勝手に動かさず、普通の ▶ で待つ
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    // React は muted を属性として HTML に出さないので、自動再生の前にここで立てる
-    video.muted = true
-    void video.play().catch(() => {})
-  }, [hero])
+    if (!video) return
+    let cancelled = false
+    let destroy: (() => void) | undefined
+
+    const autoplay = () => {
+      if (!hero || cancelled) return
+      // 動きを減らす設定の人には勝手に動かさず、普通の ▶ で待つ
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      // React は muted を属性として HTML に出さないので、自動再生の前にここで立てる
+      video.muted = true
+      void video.play().catch(() => {})
+    }
+
+    if (!hls) {
+      autoplay()
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = hls
+      autoplay()
+    } else {
+      void import('hls.js').then(({ default: Hls }) => {
+        if (cancelled) return
+        if (!Hls.isSupported()) {
+          video.src = src
+          autoplay()
+          return
+        }
+        // 表示サイズより大きい画質は取りに行かない
+        const player = new Hls({ capLevelToPlayerSize: true })
+        player.loadSource(hls)
+        player.attachMedia(video)
+        destroy = () => player.destroy()
+        autoplay()
+      })
+    }
+
+    return () => {
+      cancelled = true
+      destroy?.()
+    }
+  }, [hero, hls, src])
 
   const toggle = () => {
     const video = videoRef.current
@@ -51,7 +88,8 @@ export function ShowcaseClip({
     <>
       <video
         ref={videoRef}
-        src={src}
+        // hls のときは effect の中で付ける。先に mp4 を付けると丸ごと落とし始めてしまう
+        src={hls ? undefined : src}
         poster={poster}
         loop
         playsInline
