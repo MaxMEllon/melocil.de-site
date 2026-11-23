@@ -51,14 +51,37 @@ description: melocil.de の出演イベントを data/appearances.json に登録
 
 ## 2. 告知ツイートから読み取る（URL を渡された場合）
 
-X は未ログインだとほとんど返ってこないので、playwright MCP のログイン済みプロファイルを使う。
+X は未ログインだとほとんど返ってこないので、ログイン済みのブラウザで開く。どの環境でも、
+画像の `src` は `https://pbs.twimg.com/media/<メディア ID>?format=jpg&name=small` の形で、
+この `<メディア ID>` がそのまま保存先のファイル名になる。
+
+### Mac（Claude in Chrome）
+
+普段使いの Chrome が X にログイン済みなので、`mcp__claude-in-chrome__*` で読む。
+`navigate` でツイートを開き（URL の `?a=...&s=20` は外してよい）、`javascript_tool` で本文と
+メディア ID をまとめて取る:
+
+```js
+await new Promise(r => setTimeout(r, 3000));
+const a = document.querySelector('article');
+[a?.querySelector('[data-testid="tweetText"]')?.innerText,
+ a?.querySelector('time')?.dateTime,
+ [...a.querySelectorAll('img')].map(i => i.src.split('?')[0])
+   .filter(s => s.includes('/media/')).map(s => s.split('/media/')[1]).join(',')
+].join('\n---\n')
+```
+
+画像 URL をクエリ付きのまま返すと `[BLOCKED: Cookie/query string data]` で弾かれるので、
+上のように `?` 以降を落として ID だけ返す。終わったらタブを閉じる。
+
+### Linux（playwright MCP）
+
+playwright MCP のログイン済みプロファイルを使う。
 起動は `--browser chromium` 付き（`/opt/google/chrome/chrome` は無い）、プロファイルは
 `--user-data-dir /home/maxmellon/.cache/playwright-mcp-x`。設定は `~/.claude.json` の
 `projects["/home/maxmellon/melocil.de"].mcpServers.playwright`。
 
 `browser_navigate` でツイートを開き、`browser_snapshot` から本文とフライヤー画像を拾う。
-画像の `src` は `https://pbs.twimg.com/media/<メディア ID>?format=jpg&name=small` の形で、
-この `<メディア ID>` がそのまま保存先のファイル名になる。
 
 `browser_evaluate` の `filename` は **絶対パスかつ `/home/maxmellon/melocil.de` 配下**でないと保存されない
 （scratchpad は allowed roots の外で拒否される）。`.playwright-mcp/xxx.json` に吐いてからコピーする。
@@ -68,7 +91,8 @@ X は未ログインだとほとんど返ってこないので、playwright MCP 
 
 ## 3. フライヤーを取り込む
 
-メディア ID が分かれば画像自体はログイン不要で落とせる。既存の 80 枚と同じ「長辺 640px の lossy webp」に揃える:
+メディア ID が分かれば画像自体はログイン不要で落とせる。既存の 80 枚と同じ「長辺 640px の lossy webp」に揃える
+（変換は libwebp 付きの ffmpeg、無ければ ImageMagick。Homebrew の ffmpeg は webp を書けないことがある）:
 
 ```bash
 .claude/skills/add-appearance/fetch-flyer.sh <メディア ID>
