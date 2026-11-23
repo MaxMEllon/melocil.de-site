@@ -34,9 +34,18 @@ if [[ -z $source ]]; then
   curl -fsSL -o "$source" "https://pbs.twimg.com/media/$name?format=jpg&name=large"
 fi
 
-ffmpeg -v error -i "$source" \
-  -vf 'scale=w=640:h=640:force_original_aspect_ratio=decrease' \
-  -q:v 80 "$out" -y
+# 長辺 640px・品質 80 の lossy webp。使える変換器を順に試す
+# （Homebrew の ffmpeg は webp エンコーダ無しでビルドされていることがある）
+if command -v ffmpeg >/dev/null && ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libwebp; then
+  ffmpeg -v error -i "$source" \
+    -vf 'scale=w=640:h=640:force_original_aspect_ratio=decrease' \
+    -c:v libwebp -q:v 80 "$out" -y
+elif command -v magick >/dev/null; then
+  magick "$source" -resize '640x640>' -quality 80 "$out"
+else
+  echo "webp に変換できるツールがありません（libwebp 付き ffmpeg か ImageMagick が必要）" >&2
+  exit 1
+fi
 
 echo "public/flyers/$name.webp: $(file -b "$out")" >&2
 echo "$name.webp"
