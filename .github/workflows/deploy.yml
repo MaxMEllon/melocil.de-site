@@ -46,6 +46,34 @@ jobs:
           curl -fsSL https://github.com/MaxMEllon/cue-parser/archive/refs/heads/web-dist.tar.gz \
             | tar xz --strip-components=1 -C out/cue-parser
 
+      # melocil.de/design-system を配信する。
+      # MaxMEllon/design-system の main の site/（自己完結の 1 ページ）と、各アプリ向けの生成物 dist/。
+      # design-system は非公開なので、lemona.de と同じ読み取り専用トークン（secret LEMONADE_READ_TOKEN、
+      # design-system と lemona.de の Contents: Read-only）で取得する。
+      # 取得に失敗したときは飛ばし、ほかのページのデプロイは止めない。
+      - name: Fetch design-system docs
+        if: env.HAS_LEMONADE_TOKEN == 'true'
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: MaxMEllon/design-system
+          ref: main
+          token: ${{ secrets.LEMONADE_READ_TOKEN }}
+          path: design-system
+          sparse-checkout: |
+            site
+            dist
+
+      - name: Place design-system docs
+        run: |
+          if [ ! -d design-system/site ]; then
+            echo "no design-system checkout; skipping /design-system/"
+            exit 0
+          fi
+          mkdir -p out/design-system
+          cp -r design-system/site/. out/design-system/
+          cp -r design-system/dist out/design-system/dist
+
       # melocil.de/lemona.de を配信する。
       # MaxMEllon/lemona.de（非公開）の web-dist ブランチにビルド済みのドキュメント（MkDocs）が置かれている。
       # 読み取り専用トークン（secret LEMONADE_READ_TOKEN、lemona.de の Contents: Read-only）で取得する。
